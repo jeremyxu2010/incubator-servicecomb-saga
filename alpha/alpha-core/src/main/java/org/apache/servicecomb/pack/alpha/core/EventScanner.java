@@ -24,8 +24,12 @@ import static org.apache.servicecomb.pack.common.EventType.TxEndedEvent;
 import static org.apache.servicecomb.pack.common.EventType.TxStartedEvent;
 
 import java.lang.invoke.MethodHandles;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import kamon.annotation.EnableKamon;
 import kamon.annotation.Trace;
@@ -109,10 +113,15 @@ public class EventScanner implements Runnable {
     timeoutRepository.markTimeoutAsDone();
   }
 
+  private <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+    final Set<Object> seen = new HashSet<>();
+    return t -> seen.add(keyExtractor.apply(t));
+  }
+
   @Trace("saveUncompensatedEventsToCommands")
   private void saveUncompensatedEventsToCommands() {
     eventRepository.findFirstUncompensatedEventByIdGreaterThan(nextEndedEventId, TxEndedEvent.name())
-        .forEach(event -> {
+        .stream().filter(distinctByKey(e -> e.globalTxId())).forEach(event -> {
           LOG.info("Found uncompensated event {}", event);
           nextEndedEventId = event.id();
           commandRepository.saveCompensationCommands(event.globalTxId());
