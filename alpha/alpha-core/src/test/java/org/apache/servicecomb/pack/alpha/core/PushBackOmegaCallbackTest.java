@@ -37,7 +37,7 @@ public class PushBackOmegaCallbackTest {
 
   private final OmegaCallback underlying = Mockito.mock(OmegaCallback.class);
   private final BlockingQueue<Runnable> runnables = new LinkedBlockingQueue<>();
-  private final PushBackOmegaCallback pushBack = new PushBackOmegaCallback(runnables, underlying);
+  private final PushBackOmegaCallback pushBack = new PushBackOmegaCallback(runnables, underlying, 300000L);
 
   @Before
   public void setUp() throws Exception {

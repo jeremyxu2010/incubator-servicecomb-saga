@@ -28,14 +28,20 @@ public class PushBackOmegaCallback implements OmegaCallback {
 
   private final BlockingQueue<Runnable> pendingCompensations;
   private final OmegaCallback underlying;
+  private final long compensateTimeout;
 
-  public PushBackOmegaCallback(BlockingQueue<Runnable> pendingCompensations, OmegaCallback underlying) {
+  public PushBackOmegaCallback(BlockingQueue<Runnable> pendingCompensations, OmegaCallback underlying, long compensateTimeout) {
     this.pendingCompensations = pendingCompensations;
     this.underlying = underlying;
+    this.compensateTimeout = compensateTimeout;
   }
 
   @Override
   public void compensate(TxEvent event) {
+    if((System.currentTimeMillis() - event.creationTime().getTime()) > compensateTimeout){
+      logError(event, new RuntimeException("Execute compensate method timeout"));
+      return;
+    }
     try {
       underlying.compensate(event);
     } catch (Exception e) {

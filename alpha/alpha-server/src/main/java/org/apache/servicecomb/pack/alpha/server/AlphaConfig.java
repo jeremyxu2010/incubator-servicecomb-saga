@@ -58,6 +58,9 @@ public class AlphaConfig {
   @Value("${alpha.tx.timeout-seconds:600}")
   private int globalTxTimeoutSeconds;
 
+  @Value("${alpha.compensation.retry.compensateTimeout:1800000}")
+  private int compensateTimeout;
+
   @Bean
   Map<String, Map<String, OmegaCallback>> omegaCallbacks() {
     return new ConcurrentHashMap<>();
@@ -65,7 +68,7 @@ public class AlphaConfig {
 
   @Bean
   OmegaCallback omegaCallback(Map<String, Map<String, OmegaCallback>> callbacks) {
-    return new PushBackOmegaCallback(pendingCompensations, new CompositeOmegaCallback(callbacks));
+    return new PushBackOmegaCallback(pendingCompensations, new CompositeOmegaCallback(callbacks), compensateTimeout);
   }
   
   @Bean
